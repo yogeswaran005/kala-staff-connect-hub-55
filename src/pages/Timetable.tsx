@@ -9,7 +9,7 @@ import { TimetableView } from "@/components/ui/TimetableView";
 import { facultyTimetable } from "@/utils/mockData";
 import { Button } from "@/components/ui/button";
 import { Download, Printer } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 const Timetable = () => {
   const { user } = useAuth();
