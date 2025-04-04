@@ -1,12 +1,12 @@
 
 import { useState, FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
-import { BookOpen, Lock, LogIn, User } from "lucide-react";
+import { BookOpen, Lock, LogIn, User, UserPlus } from "lucide-react";
 
 const Index = () => {
   const [username, setUsername] = useState("");
@@ -101,7 +101,15 @@ const Index = () => {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="justify-center border-t px-8 py-4">
+          <CardFooter className="flex flex-col space-y-4 border-t px-6 py-4">
+            <div className="text-sm text-center text-gray-600 dark:text-gray-400">
+              Don't have an account?{" "}
+              <Link to="/signup" className="font-medium text-kala-600 hover:underline dark:text-kala-400">
+                <span className="flex items-center justify-center mt-2">
+                  <UserPlus className="mr-1 h-4 w-4" /> Create an account
+                </span>
+              </Link>
+            </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">
               Demo Credentials: Username: <span className="font-medium">faculty</span> Password: <span className="font-medium">password</span>
             </div>

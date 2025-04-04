@@ -17,6 +17,7 @@ type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<boolean>;
+  signup: (name: string, username: string, email: string, password: string, department: string, role: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
 };
@@ -26,6 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
   login: async () => false,
+  signup: async () => false,
   logout: () => {},
   isLoading: false,
 });
@@ -79,6 +81,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
+  const signup = async (
+    name: string, 
+    username: string, 
+    email: string, 
+    password: string, 
+    department: string, 
+    role: string
+  ): Promise<boolean> => {
+    setIsLoading(true);
+    // Simulate API request
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Create a new user object
+        const newUser: User = {
+          id: Date.now().toString(),
+          username,
+          name,
+          department,
+          role,
+          email,
+        };
+        
+        setUser(newUser);
+        localStorage.setItem("kalaUser", JSON.stringify(newUser));
+        toast.success("Account created successfully!");
+        resolve(true);
+        setIsLoading(false);
+      }, 1500);
+    });
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("kalaUser");
@@ -92,6 +125,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         user,
         isAuthenticated: !!user,
         login,
+        signup,
         logout,
         isLoading,
       }}
