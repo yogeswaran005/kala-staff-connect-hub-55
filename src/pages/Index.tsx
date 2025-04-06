@@ -7,18 +7,50 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { BookOpen, Lock, LogIn, User, UserPlus } from "lucide-react";
+import { useEffect } from "react";
 
 const Index = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const [errors, setErrors] = useState<{username?: string; password?: string}>({});
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const validateForm = () => {
+    const newErrors: {username?: string; password?: string} = {};
+    let isValid = true;
+
+    if (!username.trim()) {
+      newErrors.username = "Username is required";
+      isValid = false;
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required";
+      isValid = false;
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     
+    if (!validateForm()) return;
+    
+    setIsLoading(true);
     const success = await login(username, password);
     
     if (success) {
@@ -57,12 +89,12 @@ const Index = () => {
                     id="username"
                     type="text"
                     placeholder="Enter your username"
-                    className="pl-10"
+                    className={`pl-10 ${errors.username ? 'border-red-500' : ''}`}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    required
                   />
                 </div>
+                {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -72,12 +104,12 @@ const Index = () => {
                     id="password"
                     type="password"
                     placeholder="••••••••"
-                    className="pl-10"
+                    className={`pl-10 ${errors.password ? 'border-red-500' : ''}`}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
                   />
                 </div>
+                {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
               </div>
               <div className="flex items-center justify-end">
                 <a href="#" className="text-sm text-kala-600 hover:text-kala-700 dark:text-kala-400 dark:hover:text-kala-300">

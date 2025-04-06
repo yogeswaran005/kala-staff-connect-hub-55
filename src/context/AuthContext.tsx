@@ -4,13 +4,16 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 // Types
-type User = {
+export type User = {
   id: string;
   username: string;
   name: string;
   department: string;
   role: string;
   email: string;
+  phone?: string;
+  officeLocation?: string;
+  joinDate?: string;
 };
 
 type AuthContextType = {
@@ -19,6 +22,7 @@ type AuthContextType = {
   login: (username: string, password: string) => Promise<boolean>;
   signup: (name: string, username: string, email: string, password: string, department: string, role: string) => Promise<boolean>;
   logout: () => void;
+  updateProfile: (updatedUser: Partial<User>) => void;
   isLoading: boolean;
 };
 
@@ -29,17 +33,21 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => false,
   signup: async () => false,
   logout: () => {},
+  updateProfile: () => {},
   isLoading: false,
 });
 
 // Sample user for demo
 const sampleUser: User = {
   id: "1",
-  username: "faculty1",
+  username: "faculty",
   name: "Dr. Rajesh Kumar",
   department: "Computer Science",
   role: "Associate Professor",
   email: "rajesh.kumar@kalasalingam.ac.in",
+  phone: "+91 9876543210",
+  officeLocation: "CSE Block, Room 204",
+  joinDate: "June 15, 2015"
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -93,6 +101,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Simulate API request
     return new Promise((resolve) => {
       setTimeout(() => {
+        // Check if username already exists (for demo, just check against sample user)
+        if (username === sampleUser.username) {
+          toast.error("Username already exists. Please try another one.");
+          setIsLoading(false);
+          resolve(false);
+          return;
+        }
+        
+        // Check if email already exists
+        if (email === sampleUser.email) {
+          toast.error("Email already registered. Please use another email.");
+          setIsLoading(false);
+          resolve(false);
+          return;
+        }
+        
         // Create a new user object
         const newUser: User = {
           id: Date.now().toString(),
@@ -101,6 +125,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           department,
           role,
           email,
+          phone: "",
+          officeLocation: "",
+          joinDate: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
         };
         
         setUser(newUser);
@@ -110,6 +141,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsLoading(false);
       }, 1500);
     });
+  };
+
+  const updateProfile = (updatedUser: Partial<User>) => {
+    if (!user) return;
+    
+    const newUserData = { ...user, ...updatedUser };
+    setUser(newUserData);
+    localStorage.setItem("kalaUser", JSON.stringify(newUserData));
+    toast.success("Profile updated successfully!");
   };
 
   const logout = () => {
@@ -127,6 +167,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         login,
         signup,
         logout,
+        updateProfile,
         isLoading,
       }}
     >

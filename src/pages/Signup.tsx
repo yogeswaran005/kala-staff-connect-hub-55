@@ -1,5 +1,5 @@
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,19 +18,99 @@ const Signup = () => {
   const [department, setDepartment] = useState("");
   const [role, setRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signup } = useAuth();
+  const [errors, setErrors] = useState<{
+    name?: string;
+    username?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    department?: string;
+    role?: string;
+  }>({});
+  
+  const { signup, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const validateForm = () => {
+    const newErrors: {
+      name?: string;
+      username?: string;
+      email?: string;
+      password?: string;
+      confirmPassword?: string;
+      department?: string;
+      role?: string;
+    } = {};
+    let isValid = true;
+
+    // Name validation
+    if (!name.trim()) {
+      newErrors.name = "Full name is required";
+      isValid = false;
+    }
+
+    // Username validation
+    if (!username.trim()) {
+      newErrors.username = "Username is required";
+      isValid = false;
+    } else if (username.length < 4) {
+      newErrors.username = "Username must be at least 4 characters";
+      isValid = false;
+    }
+
+    // Email validation
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Email address is invalid";
+      isValid = false;
+    }
+
+    // Department validation
+    if (!department) {
+      newErrors.department = "Please select a department";
+      isValid = false;
+    }
+
+    // Role validation
+    if (!role) {
+      newErrors.role = "Please select a role";
+      isValid = false;
+    }
+
+    // Password validation
+    if (!password) {
+      newErrors.password = "Password is required";
+      isValid = false;
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+      isValid = false;
+    }
+
+    // Confirm password validation
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setIsLoading(true);
-    
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
-    
     const success = await signup(name, username, email, password, department, role);
     
     if (success) {
@@ -69,12 +149,12 @@ const Signup = () => {
                     id="name"
                     type="text"
                     placeholder="Dr. John Doe"
-                    className="pl-10"
+                    className={`pl-10 ${errors.name ? 'border-red-500' : ''}`}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    required
                   />
                 </div>
+                {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
               </div>
               
               <div className="space-y-2">
@@ -85,12 +165,12 @@ const Signup = () => {
                     id="username"
                     type="text"
                     placeholder="john.doe"
-                    className="pl-10"
+                    className={`pl-10 ${errors.username ? 'border-red-500' : ''}`}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    required
                   />
                 </div>
+                {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
               </div>
               
               <div className="space-y-2">
@@ -101,19 +181,19 @@ const Signup = () => {
                     id="email"
                     type="email"
                     placeholder="john.doe@kalasalingam.ac.in"
-                    className="pl-10"
+                    className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required
                   />
                 </div>
+                {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
               </div>
               
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="department">Department</Label>
-                  <Select value={department} onValueChange={setDepartment} required>
-                    <SelectTrigger id="department">
+                  <Select value={department} onValueChange={setDepartment}>
+                    <SelectTrigger id="department" className={errors.department ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select Department" />
                     </SelectTrigger>
                     <SelectContent>
@@ -124,12 +204,13 @@ const Signup = () => {
                       <SelectItem value="Mathematics">Mathematics</SelectItem>
                     </SelectContent>
                   </Select>
+                  {errors.department && <p className="text-sm text-red-500">{errors.department}</p>}
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="role">Role</Label>
-                  <Select value={role} onValueChange={setRole} required>
-                    <SelectTrigger id="role">
+                  <Select value={role} onValueChange={setRole}>
+                    <SelectTrigger id="role" className={errors.role ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select Role" />
                     </SelectTrigger>
                     <SelectContent>
@@ -139,6 +220,7 @@ const Signup = () => {
                       <SelectItem value="Lecturer">Lecturer</SelectItem>
                     </SelectContent>
                   </Select>
+                  {errors.role && <p className="text-sm text-red-500">{errors.role}</p>}
                 </div>
               </div>
               
@@ -150,13 +232,13 @@ const Signup = () => {
                     id="password"
                     type="password"
                     placeholder="••••••••"
-                    className="pl-10"
+                    className={`pl-10 ${errors.password ? 'border-red-500' : ''}`}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={8}
+                    minLength={6}
                   />
                 </div>
+                {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
               </div>
               
               <div className="space-y-2">
@@ -167,13 +249,13 @@ const Signup = () => {
                     id="confirmPassword"
                     type="password"
                     placeholder="••••••••"
-                    className="pl-10"
+                    className={`pl-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    minLength={8}
+                    minLength={6}
                   />
                 </div>
+                {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
               </div>
               
               <Button type="submit" className="w-full bg-kala-700 hover:bg-kala-800" disabled={isLoading}>
